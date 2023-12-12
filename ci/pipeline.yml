@@ -1,0 +1,40 @@
+---
+resource_types:
+ - name: npm-cache
+   type: docker-image
+   source:
+      repository: ymedlop/npm-cache-resources
+      tag: latest
+
+
+resources:
+  - name: hello_hapi
+    type: git
+    source: &repo-source
+      uri: https://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@github.com/patelheet99/Concourse_Pipeline.git
+      branch: master
+
+  - name: dependency-cache
+    type: npm-cache
+    source:
+      <<: *repo-source
+      paths:
+        -package.json
+
+  
+jobs:
+  - name: Install dependencies
+    plan:
+      - get: hello_hapi
+        trigger: true
+      - get: dependency-cache
+
+  - name: Run tests
+    plan:
+      - get: hello_hapi
+        trigger: true
+        passed: [Install dependencies]
+      - get: dependency-cache
+        passed: [Install dependencies]
+      - task: run the test suite
+        file: CONCOURSE_PIPELINE/ci/tasks/run_tests.yml
